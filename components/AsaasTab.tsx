@@ -852,33 +852,33 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
             </section>
 
             {/* Dashboard Stats Cards avec Rich Aesthetics */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
                 {(Object.entries(stats) as [keyof typeof stats, any][]).map(([status, s]) => (
                     <button
                         key={status}
                         onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
-                        className={`p-2.5 rounded-2xl transition-all text-left relative overflow-hidden group/card shadow-md ${selectedStatus === status
-                            ? 'ring-2 ring-emerald-500/20 translate-y-[-2px]'
-                            : 'hover:translate-y-[-2px] active:translate-y-[-1px]'
+                        className={`p-1.5 px-2 rounded-xl transition-all text-left relative overflow-hidden group/card shadow-md ${selectedStatus === status
+                            ? 'ring-2 ring-emerald-500/20 translate-y-[-1px]'
+                            : 'hover:translate-y-[-1px] active:translate-y-0'
                             } bg-white border border-slate-100/50`}
                     >
                         {/* Background Ornament (Smaller) */}
-                        <div className={`absolute -right-2 -bottom-2 w-20 h-20 bg-gradient-to-br ${s.gradient} opacity-[0.03] rounded-full group-hover/card:scale-125 transition-transform duration-700`}></div>
+                        <div className={`absolute -right-2 -bottom-2 w-16 h-16 bg-gradient-to-br ${s.gradient} opacity-[0.03] rounded-full group-hover/card:scale-125 transition-transform duration-700`}></div>
 
-                        <div className="flex items-center justify-between mb-2 relative">
-                            <div className={`w-8 h-8 bg-gradient-to-br ${s.gradient} text-white rounded-lg flex items-center justify-center shadow-xl transition-transform`}>
-                                {React.cloneElement(s.icon as React.ReactElement, { size: 14 })}
+                        <div className="flex items-center justify-between mb-1 relative">
+                            <div className={`w-7 h-7 bg-gradient-to-br ${s.gradient} text-white rounded-lg flex items-center justify-center shadow-xl transition-transform`}>
+                                {React.cloneElement(s.icon as React.ReactElement, { size: 12 })}
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-base font-black text-slate-900 tracking-tighter">{s.count}</span>
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
+                                <span className="text-sm font-black text-slate-900 tracking-tighter">{s.count}</span>
+                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
                             </div>
                         </div>
 
-                        <div className="relative">
-                            <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 opacity-60">Total</div>
-                            <p className="text-base font-black text-slate-900 tracking-tight">
-                                <span className="text-[9px] font-bold text-slate-400 mr-0.5">R$</span>
+                        <div className="relative flex items-baseline gap-1">
+                            <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest opacity-60">Total:</span>
+                            <p className="text-sm font-black text-slate-900 tracking-tight">
+                                <span className="text-[8px] font-bold text-slate-400 mr-0.5">R$</span>
                                 {s.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
