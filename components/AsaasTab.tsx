@@ -959,7 +959,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                                             filteredAsaasPayments.map(p => {
                                                 const sInfo = (Object.values(stats) as any[]).find(s => s.label === (p.status === 'RECEIVED_IN_CASH' ? 'Recebidas' : (stats as any)[p.status]?.label)) || stats.PENDING;
                                                 return (
-                                                    <tr key={p.id} className="group hover:bg-white/50 transition-all duration-300">
+                                                    <tr key={p.id} className="group hover:bg-emerald-50/60 transition-all duration-300">
                                                         <td className="px-3 py-2">
                                                             <div className="font-black text-slate-900 text-base tracking-tight leading-tight">
                                                                 {tenants.find(t => t.asaasCustomerId === p.customer)?.name ||
@@ -1145,7 +1145,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                                                 const grossTotal = (data.grandTotal || 0) + (data.property?.baseRent || 0);
                                                 const netTotal = grossTotal - DISCOUNT_VALUE;
                                                 return (
-                                                    <tr key={idx} className="group hover:bg-white/50 transition-all duration-300">
+                                                    <tr key={idx} className="group hover:bg-emerald-50/60 transition-all duration-300">
                                                         <td className="px-3 py-2">
                                                             <div className="font-black text-slate-900 leading-tight text-base tracking-tight">{tenant?.name || 'Vazio'}</div>
                                                             <div className="text-[9px] text-slate-400 mt-1 uppercase font-black tracking-widest leading-none truncate max-w-[150px]">{data.property?.address}</div>
