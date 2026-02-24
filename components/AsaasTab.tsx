@@ -702,7 +702,21 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
             dateObj.setDate(dateObj.getDate() - 1);
             const limitDate = dateObj.toISOString().split('T')[0];
 
-            const description = `Aluguel + Contas\nRef: ${group.month}\nAddress: ${property.address}`;
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            const [yRef, mRef] = group.month.split('-').map(Number);
+            const rentDate = new Date(yRef, mRef, 1);
+            const rentRef = `${monthNames[rentDate.getMonth()]}/${rentDate.getFullYear()}`;
+            const utilsRef = `${monthNames[mRef - 1]}/${yRef}`;
+
+            const rentVal = property.baseRent || 0;
+            const energyVal = group.energy?.total || 0;
+            const waterVal = group.water?.total || 0;
+
+            const description = `Aluguel + Contas\nUnidade: ${property.address}\n\n` +
+                `Aluguel (${rentRef}): R$ ${rentVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+                `Energia (${utilsRef}): R$ ${energyVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+                `Água (${utilsRef}): R$ ${waterVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+                `Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
             let payment;
             try {
