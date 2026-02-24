@@ -1,0 +1,30 @@
+{
+    "name": "Boitto Gestão",
+    "short_name": "Boitto",
+    "description": "Sistema de gestão de aluguéis e faturamento automatizado.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#10b981",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "512x512",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/favicon.svg",
+            "type": "image/svg+xml",
+            "sizes": "any",
+            "purpose": "any maskable"
+        }
+    ]
+}

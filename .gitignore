@@ -1,0 +1,32 @@
+# Dependências
+node_modules/
+functions/node_modules/
+
+# Build
+dist/
+functions/lib/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Firebase
+.firebase/
+.firebaserc
+
+# Editor
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
