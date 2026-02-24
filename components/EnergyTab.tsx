@@ -2217,7 +2217,7 @@ export const EnergyTab: React.FC<EnergyTabProps> = ({ bills, waterBills, propert
                 return (
                   <React.Fragment key={group.key}>
                     {/* FIRST ROW: HEADER/COMMON + ENERGY */}
-                    <tr className={`hover:bg-slate-100/50 transition-colors ${rowBg}`}>
+                    <tr className={`hover:bg-emerald-50/60 transition-colors ${rowBg}`}>
                       {/* ENERGY ROW DATA (Icon first) */}
                       <td className="py-[1px] px-2 text-center bg-amber-50/30 border-r border-slate-100">
                         <div className="w-5 h-5 rounded bg-amber-100 text-amber-600 flex items-center justify-center mx-auto" title="Energia Elétrica"><Zap size={11} /></div>
@@ -2311,7 +2311,7 @@ export const EnergyTab: React.FC<EnergyTabProps> = ({ bills, waterBills, propert
                     </tr>
 
                     {/* SECOND ROW: WATER */}
-                    <tr className={`hover:bg-slate-100/50 transition-colors ${rowBg}`}>
+                    <tr className={`hover:bg-emerald-50/60 transition-colors ${rowBg}`}>
                       {/* Water Icon (First) */}
                       <td className="py-[1px] px-2 text-center bg-blue-50/30 border-r border-slate-100">
                         <div className="w-5 h-5 rounded bg-blue-100 text-blue-600 flex items-center justify-center mx-auto" title="Água & Esgoto"><Droplets size={11} /></div>
