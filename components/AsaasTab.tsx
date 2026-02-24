@@ -712,11 +712,9 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
             const energyVal = group.energy?.total || 0;
             const waterVal = group.water?.total || 0;
 
-            const description = `Aluguel + Contas\nUnidade: ${property.address}\n\n` +
-                `Aluguel (${rentRef}): R$ ${rentVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
-                `Energia (${utilsRef}): R$ ${energyVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
-                `Água (${utilsRef}): R$ ${waterVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
-                `Total: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+            const description = `Unid: ${property.address} - Aluguel (${rentRef}): R$ ${rentVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+                `Energia: R$ ${energyVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Água: R$ ${waterVal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+                `Total Geral: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
             let payment;
             try {
