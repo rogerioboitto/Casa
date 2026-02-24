@@ -806,31 +806,31 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
 
             {/* Header section with Glassmorphism */}
             <section className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-                <div className="relative bg-white/60 backdrop-blur-3xl border border-white/40 p-3 rounded-2xl shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white flex-shrink-0">
-                            <Wallet size={20} />
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-[2rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+                <div className="relative bg-white/60 backdrop-blur-3xl border border-white/40 p-2 rounded-xl shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white flex-shrink-0">
+                            <Wallet size={16} />
                         </div>
                         <div>
-                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest mb-1">
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[8px] font-black uppercase tracking-widest mb-0.5">
                                 <span className="relative flex h-1.5 w-1.5">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                                 </span>
                                 Asaas
                             </div>
-                            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                            <h2 className="text-lg font-black text-slate-900 tracking-tight">
                                 Situação das cobranças
                             </h2>
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
                         <div className="relative">
-                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                             <select
-                                className="bg-white border-none rounded-xl pl-11 pr-8 py-2 font-black text-slate-700 shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer min-w-[200px] text-sm appearance-none"
+                                className="bg-white border-none rounded-lg pl-9 pr-6 py-1.5 font-black text-slate-700 shadow-sm focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer min-w-[160px] text-xs appearance-none"
                                 value={filterMonth}
                                 onChange={(e) => setFilterMonth(e.target.value)}
                             >
@@ -843,54 +843,45 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                         <button
                             onClick={fetchAsaasPayments}
                             disabled={isDashboardLoading}
-                            className="p-2.5 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 group/btn"
+                            className="p-2 bg-emerald-500 text-white rounded-lg shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 group/btn"
                         >
-                            <RefreshCcw size={18} className={`${isDashboardLoading ? 'animate-spin' : 'group-hover/btn:rotate-180 transition-transform duration-700'}`} />
+                            <RefreshCcw size={16} className={`${isDashboardLoading ? 'animate-spin' : 'group-hover/btn:rotate-180 transition-transform duration-700'}`} />
                         </button>
                     </div>
                 </div>
             </section>
 
             {/* Dashboard Stats Cards avec Rich Aesthetics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                 {(Object.entries(stats) as [keyof typeof stats, any][]).map(([status, s]) => (
                     <button
                         key={status}
                         onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
-                        className={`p-3 rounded-3xl transition-all text-left relative overflow-hidden group/card shadow-lg ${selectedStatus === status
-                            ? 'ring-4 ring-emerald-500/20 translate-y-[-4px]'
-                            : 'hover:translate-y-[-4px] active:translate-y-[-2px]'
+                        className={`p-2.5 rounded-2xl transition-all text-left relative overflow-hidden group/card shadow-md ${selectedStatus === status
+                            ? 'ring-2 ring-emerald-500/20 translate-y-[-2px]'
+                            : 'hover:translate-y-[-2px] active:translate-y-[-1px]'
                             } bg-white border border-slate-100/50`}
                     >
-                        {/* Background Ornament */}
-                        <div className={`absolute -right-4 -bottom-4 w-32 h-32 bg-gradient-to-br ${s.gradient} opacity-[0.03] rounded-full group-hover/card:scale-150 transition-transform duration-700`}></div>
+                        {/* Background Ornament (Smaller) */}
+                        <div className={`absolute -right-2 -bottom-2 w-20 h-20 bg-gradient-to-br ${s.gradient} opacity-[0.03] rounded-full group-hover/card:scale-125 transition-transform duration-700`}></div>
 
-                        <div className="flex items-center justify-between mb-3 relative">
-                            <div className={`w-9 h-9 bg-gradient-to-br ${s.gradient} text-white rounded-xl flex items-center justify-center shadow-2xl transition-transform`}>
-                                {React.cloneElement(s.icon as React.ReactElement, { size: 16 })}
+                        <div className="flex items-center justify-between mb-2 relative">
+                            <div className={`w-8 h-8 bg-gradient-to-br ${s.gradient} text-white rounded-lg flex items-center justify-center shadow-xl transition-transform`}>
+                                {React.cloneElement(s.icon as React.ReactElement, { size: 14 })}
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-lg font-black text-slate-900 tracking-tighter">{s.count}</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
+                                <span className="text-base font-black text-slate-900 tracking-tighter">{s.count}</span>
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
                             </div>
                         </div>
 
                         <div className="relative">
-                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 opacity-60">Total</div>
-                            <p className="text-lg font-black text-slate-900 tracking-tight">
-                                <span className="text-[10px] font-bold text-slate-400 mr-0.5">R$</span>
+                            <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 opacity-60">Total</div>
+                            <p className="text-base font-black text-slate-900 tracking-tight">
+                                <span className="text-[9px] font-bold text-slate-400 mr-0.5">R$</span>
                                 {s.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </p>
                         </div>
-
-                        {selectedStatus === status && (
-                            <div className="absolute top-6 right-6 text-emerald-500 animate-bounce">
-                                <Filter size={18} />
-                            </div>
-                        )}
-
-                        {/* Gloss Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/20 opacity-0 group-hover/card:opacity-100 transition-opacity pointer-events-none"></div>
                     </button>
                 ))}
             </div>
@@ -933,12 +924,12 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                     </div>
                 </div>
 
-                <div className="p-6 relative">
+                <div className="p-4 relative">
                     {activeView === 'real' ? (
                         <div className="space-y-8">
                             <div className="flex items-center justify-between pb-4 border-b border-slate-100/50">
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                                    <h3 className="text-xl font-black text-slate-900 tracking-tight">
                                         {selectedStatus
                                             ? <span>Filtro: <span className="text-emerald-500">{stats[selectedStatus as keyof typeof stats].label}</span></span>
                                             : 'Todas as Cobranças'
@@ -946,7 +937,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                                     </h3>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Registros sincronizados com Asaas</p>
                                 </div>
-                                <div className="px-4 py-2 rounded-xl bg-slate-100 text-slate-500 text-xs font-bold border border-slate-200">
+                                <div className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-bold border border-slate-200">
                                     {filteredAsaasPayments.length} registros
                                 </div>
                             </div>
