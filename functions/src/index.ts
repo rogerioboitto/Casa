@@ -88,7 +88,7 @@ export const asaasProxy = functions.https.onRequest(async (req, res) => {
 
             fetchOptions.body = formData;
             // O fetch do Node adiciona o Boundary automaticamente se não setarmos Content-Type manualmente
-        } else if (req.body) {
+        } else if (req.body && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) && Object.keys(req.body).length > 0) {
             headers["Content-Type"] = "application/json";
             fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
         }

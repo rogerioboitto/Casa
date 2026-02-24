@@ -681,8 +681,18 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                 if (existing) {
                     customerId = existing.id;
                 } else {
-                    const newC = await createCustomer(tenant.name, cpfClean, tenant.email || `sem-email-${cpfClean}@boitto.app`, tenant.phone || '');
-                    customerId = newC.id;
+                    try {
+                        const newC = await createCustomer(tenant.name, cpfClean, tenant.email || `sem-email-${cpfClean}@boitto.app`, tenant.phone || '');
+                        customerId = newC.id;
+                    } catch (createErr: any) {
+                        // Se falhar (ex: CPF já existe), tenta buscar de novo
+                        const retry = await getCustomerByCpf(cpfClean);
+                        if (retry) {
+                            customerId = retry.id;
+                        } else {
+                            throw createErr;
+                        }
+                    }
                 }
                 await db.updateTenant(tenant.id, { asaasCustomerId: customerId });
             }
@@ -694,14 +704,40 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
 
             const description = `Aluguel + Contas\nRef: ${group.month}\nAddress: ${property.address}`;
 
-            const payment = await createPayment({
-                customerId,
-                dueDate,
-                value: total,
-                description,
-                items: [],
-                discount: { value: DISCOUNT_VALUE, limitDate, type: 'FIXED' }
-            });
+            let payment;
+            try {
+                payment = await createPayment({
+                    customerId,
+                    dueDate,
+                    value: total,
+                    description,
+                    items: [],
+                    discount: { value: DISCOUNT_VALUE, limitDate, type: 'FIXED' }
+                });
+            } catch (payErr: any) {
+                // FALLBACK: Se o customerId estava salvo mas é inválido no Asaas (ex: deleção manual no painel)
+                if (payErr.message?.includes('invalid_customer')) {
+                    console.warn("ID de cliente inválido detectado. Limpando e tentando recriar...");
+                    const cpfClean = tenant.cpf.replace(/\D/g, '');
+                    // Força nova busca/criação
+                    const retryC = await getCustomerByCpf(cpfClean) ||
+                        await createCustomer(tenant.name, cpfClean, tenant.email || `sem-email-${cpfClean}@boitto.app`, tenant.phone || '');
+                    customerId = retryC.id;
+                    await db.updateTenant(tenant.id, { asaasCustomerId: customerId });
+
+                    // Segunda tentativa de pagamento
+                    payment = await createPayment({
+                        customerId,
+                        dueDate,
+                        value: total,
+                        description,
+                        items: [],
+                        discount: { value: DISCOUNT_VALUE, limitDate, type: 'FIXED' }
+                    });
+                } else {
+                    throw payErr;
+                }
+            }
 
             // --- Upload do Recibo (Profissional) ---
             try {
@@ -1080,7 +1116,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                                             <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase">Inquilino / Unidade</th>
                                             <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase text-center">Consumos</th>
                                             <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase text-center">Aluguel</th>
-                                            <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase text-center">Total Líquido</th>
+                                            <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase text-center">TOTAL</th>
                                             <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase text-center">Ações</th>
                                         </tr>
                                     </thead>
@@ -1125,8 +1161,8 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                                                         </td>
                                                         <td className="px-3 py-2 text-center font-black text-slate-700 text-sm whitespace-nowrap">R$ {data.property?.baseRent?.toFixed(2).replace('.', ',') || '0,00'}</td>
                                                         <td className="px-3 py-2 text-center">
-                                                            <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 opacity-60">Total Líquido</div>
-                                                            <span className="font-black text-slate-900 text-lg tracking-tighter whitespace-nowrap">R$ {netTotal.toFixed(2).replace('.', ',')}</span>
+                                                            <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 opacity-60">TOTAL</div>
+                                                            <span className="font-black text-slate-900 text-lg tracking-tighter whitespace-nowrap">R$ {grossTotal.toFixed(2).replace('.', ',')}</span>
                                                         </td>
                                                         <td className="px-3 py-2 text-center">
                                                             <div className="flex flex-row items-center justify-center gap-2 transition-all duration-300">
@@ -1205,10 +1241,10 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                                                         <div className="font-black text-slate-700">R$ {data.property?.baseRent?.toFixed(2).replace('.', ',') || '0,00'}</div>
                                                     </div>
                                                     <div className="pt-2 border-t border-slate-50 flex justify-between items-center">
-                                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Líquido</div>
+                                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TOTAL</div>
                                                         <div className="text-lg font-black text-slate-900 tracking-tighter">
                                                             <span className="text-xs text-slate-400 font-bold mr-0.5">R$</span>
-                                                            {netTotal.toFixed(2).replace('.', ',')}
+                                                            {grossTotal.toFixed(2).replace('.', ',')}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1241,3 +1277,4 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
         </div>
     );
 };
+
