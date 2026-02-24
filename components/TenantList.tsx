@@ -72,7 +72,7 @@ export const TenantList: React.FC<TenantListProps> = ({
                             {sortedTenants.map(tenant => {
                                 const property = getPropertyForTenant(tenant.id);
                                 return (
-                                    <tr key={tenant.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <tr key={tenant.id} className="hover:bg-emerald-50/60 transition-colors group">
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">

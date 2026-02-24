@@ -56,7 +56,7 @@ export const PropertyList: React.FC<PropertyListProps> = ({
                             {sortedProperties.map(property => {
                                 const tenant = tenants.find(t => t.id === property.tenantId);
                                 return (
-                                    <tr key={property.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <tr key={property.id} className="hover:bg-emerald-50/60 transition-colors group">
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2.5 h-2.5 rounded-full ${tenant ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-slate-300'}`}></div>
