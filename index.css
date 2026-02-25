@@ -1,0 +1,10 @@
+/* Estilos globais do sistema Boitto */
+:root {
+  --primary: #10b981;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
