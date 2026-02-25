@@ -1,5 +1,8 @@
 import * as functions from "firebase-functions";
 import * as logger from "firebase-functions/logger";
+import * as admin from "firebase-admin";
+
+admin.initializeApp();
 
 const ASAAS_BASE_URL = "https://api.asaas.com/v3";
 
@@ -121,5 +124,55 @@ export const asaasProxy = functions.https.onRequest(async (req, res) => {
     } catch (error: any) {
         logger.error("[AsaasProxy v1.3] Internal error:", error.message);
         res.status(500).json({ error: error.message, v: "1.3" });
+    }
+});
+
+export const asaasWebhook = functions.https.onRequest(async (req, res) => {
+    // Basic security: only POST is allowed
+    if (req.method !== "POST") {
+        res.status(405).send("Method Not Allowed");
+        return;
+    }
+
+    try {
+        const event = req.body;
+        logger.info("[AsaasWebhook] Event received:", event.event);
+
+        // Events we are interested in
+        const targetEvents = ["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "PAYMENT_RECEIVED_IN_CASH"];
+
+        if (targetEvents.includes(event.event)) {
+            const payment = event.payment;
+            const valueFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.value);
+
+            // 1. Get all push tokens from Firestore
+            // We store them in a collection 'users' under a specific document or a 'pushTokens' collection
+            const tokensSnapshot = await admin.firestore().collection("pushTokens").get();
+            const tokens = tokensSnapshot.docs.map(doc => doc.data().token);
+
+            if (tokens.length > 0) {
+                const message = {
+                    notification: {
+                        title: "Pagamento Recebido! 💰",
+                        body: `A cobrança de ${valueFormatted} foi paga.`,
+                    },
+                    data: {
+                        paymentId: payment.id,
+                        click_action: "FLUTTER_NOTIFICATION_CLICK" // Common for many setups, or just custom data
+                    },
+                    tokens: tokens,
+                };
+
+                const response = await admin.messaging().sendEachForMulticast(message);
+                logger.info(`[AsaasWebhook] Push notifications sent. Success: ${response.successCount}, Failure: ${response.failureCount}`);
+            } else {
+                logger.warn("[AsaasWebhook] No push tokens found in database.");
+            }
+        }
+
+        res.status(200).send("OK");
+    } catch (error: any) {
+        logger.error("[AsaasWebhook] Error processing webhook:", error.message);
+        res.status(500).send("Internal Error");
     }
 });

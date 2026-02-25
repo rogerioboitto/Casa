@@ -59,3 +59,39 @@ self.addEventListener('activate', (event) => {
         ])
     );
 });
+
+// --- Push Notification Handling ---
+self.addEventListener('push', (event) => {
+    if (!event.data) return;
+
+    try {
+        const data = event.data.json();
+        const options = {
+            body: data.notification?.body || "Novo aviso do sistema.",
+            icon: '/favicon.svg',
+            badge: '/favicon.svg',
+            vibrate: [100, 50, 100],
+            data: {
+                paymentId: data.data?.paymentId,
+                url: '/'
+            }
+        };
+
+        event.waitUntil(
+            self.registration.showNotification(
+                data.notification?.title || "Casa: Atualização",
+                options
+            )
+        );
+    } catch (e) {
+        console.error('Push event error:', e);
+    }
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('/')
+    );
+});
+

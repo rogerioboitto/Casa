@@ -2,7 +2,7 @@
 import {
     Calendar, Wallet, ArrowRight, FileText, Droplets, Zap, Loader2,
     ExternalLink, FileDown, MessageCircle, DollarSign, RefreshCcw,
-    CheckCircle2, AlertCircle, Clock, Filter, CreditCard, Trash2
+    CheckCircle2, AlertCircle, Clock, Filter, CreditCard, Trash2, Bell, BellOff
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { Tenant, Property, EnergyBill, WaterBill } from '../types';
@@ -10,6 +10,7 @@ import {
     createPayment, calculateDueDate, getCustomerByCpf,
     createCustomer, getPayments, formatReferenceMonth, getCustomers, deletePayment, getNextMonth, uploadPaymentDocument
 } from '../services/asaasService';
+import { requestNotificationPermission } from '../services/messagingService';
 import { db } from '../services/db';
 import { Toast } from './Toast';
 
@@ -31,6 +32,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
     const [activeView, setActiveView] = useState<'real' | 'prep'>('real');
     const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
     const [customersMap, setCustomersMap] = useState<Record<string, string>>({});
+    const [notificationsEnabled, setNotificationsEnabled] = useState(Notification.permission === 'granted');
 
     const [createdCharges, setCreatedCharges] = useState<Record<string, string>>(() => {
         const saved = localStorage.getItem('asaas-created-charges');
@@ -827,6 +829,25 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
+                        <button
+                            onClick={async () => {
+                                const success = await requestNotificationPermission();
+                                if (success) {
+                                    setNotificationsEnabled(true);
+                                    showToast("Notificações ativadas com sucesso!", "success");
+                                }
+                            }}
+                            className={`p-2 rounded-lg transition-all duration-300 flex items-center gap-2 border ${notificationsEnabled
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}`}
+                            title={notificationsEnabled ? "Notificações ativas" : "Ativar avisos no celular"}
+                        >
+                            {notificationsEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+                            <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">
+                                {notificationsEnabled ? "Avisos Ativos" : "Ativar Avisos"}
+                            </span>
+                        </button>
+
                         <div className="relative">
                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                             <select
@@ -850,6 +871,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                     </div>
                 </div>
             </section>
+
 
             {/* Dashboard Stats Cards avec Rich Aesthetics */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
