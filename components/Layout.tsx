@@ -10,7 +10,8 @@ import {
   LogOut,
   ChevronRight,
   CreditCard,
-  Download
+  Download,
+  Wallet
 } from 'lucide-react';
 import { authInstance } from '../services/firebaseConfig';
 import { signOut } from 'firebase/auth';
@@ -32,6 +33,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     { id: 'tenants', label: 'Inquilinos', icon: <Users size={20} /> },
     { id: 'energy', label: 'Contas', icon: <Zap size={20} /> },
     { id: 'asaas', label: 'Asaas', icon: <CreditCard size={20} /> },
+    { id: 'asaas2', label: 'Asaas 2', icon: <Wallet size={20} /> },
     { id: 'security', label: 'Segurança', icon: <Shield size={20} /> },
   ];
 

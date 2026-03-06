@@ -13,6 +13,7 @@ import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import Login from './components/Login';
 import AccessManagementTab from './components/AccessManagementTab';
 import { AsaasTab } from './components/AsaasTab';
+import { Asaas2Tab } from './components/Asaas2Tab';
 import { InstallPrompt } from './components/InstallPrompt';
 
 const App: React.FC = () => {
@@ -466,6 +467,13 @@ const App: React.FC = () => {
           waterBills={waterBills}
           filterMonth={filterMonthAsaas}
           setFilterMonth={setFilterMonthAsaas}
+        />
+      )}
+
+      {activeTab === 'asaas2' && (
+        <Asaas2Tab
+          tenants={tenants}
+          properties={properties}
         />
       )}
 

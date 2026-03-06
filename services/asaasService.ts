@@ -324,3 +324,183 @@ export async function uploadPaymentDocument(
     throw error;
   }
 }
+
+/**
+ * Busca o saldo financeiro da conta Asaas
+ */
+export async function getFinanceBalance(): Promise<{ balance: number }> {
+  try {
+    const response = await fetch(`${API_BASE}/finance/balance`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching balance from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca as transações financeiras da conta
+ */
+export async function getFinancialTransactions(params: {
+  offset?: number;
+  limit?: number;
+  startDate?: string;
+  finishDate?: string;
+} = {}): Promise<{ data: any[], totalCount: number }> {
+  try {
+    const query = new URLSearchParams();
+    if (params.offset) query.append('offset', params.offset.toString());
+    query.append('limit', (params.limit || 20).toString());
+    if (params.startDate) query.append('startDate', params.startDate);
+    if (params.finishDate) query.append('finishDate', params.finishDate);
+
+    const response = await fetch(`${API_BASE}/financialTransactions?${query.toString()}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data || [],
+      totalCount: data.totalCount || 0
+    };
+  } catch (error: any) {
+    console.error('Error fetching financial transactions from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca as chaves Pix cadastradas na própria conta Asaas (para recebimento)
+ */
+export async function getPixAddressKeys(): Promise<{ data: any[] }> {
+  try {
+    const response = await fetch(`${API_BASE}/pix/addressKeys`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching Pix keys from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca as contas bancárias cadastradas para saque/transferência
+ */
+export async function getBankAccounts(): Promise<{ data: any[] }> {
+  try {
+    const response = await fetch(`${API_BASE}/bankAccounts`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching bank accounts from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca o histórico de eventos de uma cobrança
+ */
+export async function getPaymentHistory(paymentId: string): Promise<{ data: any[] }> {
+  try {
+    const response = await fetch(`${API_BASE}/payments/${paymentId}/history`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching payment history from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca as notificações enviadas de uma cobrança
+ */
+export async function getPaymentNotifications(paymentId: string): Promise<{ data: any[] }> {
+  try {
+    const response = await fetch(`${API_BASE}/payments/${paymentId}/notifications`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching payment notifications from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
+ * Realiza uma transferência (Pix ou Saldo) para uma conta Própria
+ */
+export async function transferPix(value: number, pixAddressKey?: string, pixAddressKeyType?: string, bankAccountId?: string): Promise<any> {
+  try {
+    const body: any = {
+      value,
+      description: 'Transferência entre contas próprias'
+    };
+
+    if (pixAddressKey) {
+      body.operationType = 'PIX';
+      body.pixAddressKey = pixAddressKey;
+      body.pixAddressKeyType = pixAddressKeyType;
+    } else if (bankAccountId) {
+      body.operationType = 'BANK_ACCOUNT';
+      body.bankAccount = bankAccountId;
+    } else {
+      throw new Error('É necessário informar uma chave Pix ou um ID de conta bancária.');
+    }
+
+    const response = await fetch(`${API_BASE}/transfers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(`Asaas Transfer API error: ${JSON.stringify(error)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error performing transfer in Asaas:', error);
+    throw error;
+  }
+}
