@@ -153,7 +153,8 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
         // Add current and next 4 months to handle future charges
         for (let i = 0; i < 5; i++) {
             const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-            months.add(d.toISOString().slice(0, 7));
+            const mStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            months.add(mStr);
         }
 
         bills.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
@@ -857,7 +858,7 @@ export const AsaasTab: React.FC<AsaasTabProps> = ({ tenants, properties, bills, 
                             >
                                 <option value="">Mês...</option>
                                 {availableMonths.map(m => (
-                                    <option key={m} value={m}>{m.split('-').reverse().join('/')}</option>
+                                    <option key={m} value={m}>{formatReferenceMonth(m)}</option>
                                 ))}
                             </select>
                         </div>

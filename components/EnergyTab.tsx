@@ -34,7 +34,10 @@ export const EnergyTab: React.FC<EnergyTabProps> = ({ bills, waterBills, propert
 
   // State for Month Selection Modal
   const [showMonthModal, setShowMonthModal] = useState(false);
-  const [readingMonth, setReadingMonth] = useState(new Date().toISOString().slice(0, 7)); // Default: Current Month YYYY-MM
+  const [readingMonth, setReadingMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }); // Default: Current Month YYYY-MM
 
   // --- WATER STATE ---
   const waterFileInputRef = useRef<HTMLInputElement>(null);
@@ -1620,6 +1623,10 @@ export const EnergyTab: React.FC<EnergyTabProps> = ({ bills, waterBills, propert
 
   const availableUnifiedMonths = useMemo(() => {
     const months = new Set<string>();
+    const now = new Date();
+    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    months.add(current);
+
     bills.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
     waterBills.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
     return Array.from(months).sort().reverse();

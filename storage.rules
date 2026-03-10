@@ -2,8 +2,15 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    
+    // Função para verificar se o usuário está na whitelist no Firestore
+    function isAuthorized() {
+      return request.auth != null && 
+             firestore.exists(/databases/(default)/documents/allowed_emails/$(request.auth.token.email.lower()));
+    }
+
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAuthorized();
     }
   }
 }

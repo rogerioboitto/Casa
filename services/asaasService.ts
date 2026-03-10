@@ -6,11 +6,26 @@
 
 const API_BASE = '/api/asaas';
 
+import { authInstance } from './firebaseConfig';
+
 interface AsaasCustomer {
   id: string;
   name: string;
   email: string;
   cpfCnpj: string;
+}
+
+/**
+ * Helper para obter headers de autenticação
+ */
+async function getAuthHeaders() {
+  const user = authInstance.currentUser;
+  if (!user) return { 'Content-Type': 'application/json' };
+  const token = await user.getIdToken();
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
 }
 
 interface AsaasPaymentItem {
@@ -56,7 +71,7 @@ export async function getCustomerByCpf(cpf: string): Promise<AsaasCustomer | nul
     const url = `${API_BASE}/customers?cpfCnpj=${cleanCpf}`;
 
     const response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -87,7 +102,7 @@ export async function createCustomer(
 
     const response = await fetch(`${API_BASE}/customers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         name,
         cpfCnpj: cleanCpf,
@@ -131,7 +146,7 @@ export async function createPayment(params: CreatePaymentParams): Promise<AsaasP
 
     const response = await fetch(`${API_BASE}/payments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify(body)
     });
 
@@ -154,7 +169,7 @@ export async function deletePayment(id: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE}/payments/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -248,7 +263,7 @@ export async function getPayments(params: {
     query.append('offset', (params.offset || 0).toString());
 
     const response = await fetch(`${API_BASE}/payments?${query.toString()}`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -277,7 +292,7 @@ export async function getCustomers(params: { offset?: number; limit?: number } =
     query.append('offset', (params.offset || 0).toString());
 
     const response = await fetch(`${API_BASE}/customers?${query.toString()}`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -305,7 +320,7 @@ export async function uploadPaymentDocument(
   try {
     const response = await fetch(`${API_BASE}/payments/${paymentId}/documents`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         fileBase64,
         fileName,
@@ -331,7 +346,7 @@ export async function uploadPaymentDocument(
 export async function getFinanceBalance(): Promise<{ balance: number }> {
   try {
     const response = await fetch(`${API_BASE}/finance/balance`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -347,6 +362,27 @@ export async function getFinanceBalance(): Promise<{ balance: number }> {
 }
 
 /**
+ * Busca dados da própria conta do Asaas (Perfil/Configurações)
+ */
+export async function getMyAccount(): Promise<any> {
+  try {
+    const response = await fetch(`${API_BASE}/myAccount`, {
+      headers: await getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Asaas API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error fetching my account data from Asaas:', error);
+    throw error;
+  }
+}
+
+/**
  * Busca as transações financeiras da conta
  */
 export async function getFinancialTransactions(params: {
@@ -354,6 +390,7 @@ export async function getFinancialTransactions(params: {
   limit?: number;
   startDate?: string;
   finishDate?: string;
+  payment?: string;
 } = {}): Promise<{ data: any[], totalCount: number }> {
   try {
     const query = new URLSearchParams();
@@ -361,9 +398,11 @@ export async function getFinancialTransactions(params: {
     query.append('limit', (params.limit || 20).toString());
     if (params.startDate) query.append('startDate', params.startDate);
     if (params.finishDate) query.append('finishDate', params.finishDate);
+    if (params.payment) query.append('payment', params.payment);
+    if ((params as any).customer) query.append('customer', (params as any).customer);
 
     const response = await fetch(`${API_BASE}/financialTransactions?${query.toString()}`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -388,7 +427,7 @@ export async function getFinancialTransactions(params: {
 export async function getPixAddressKeys(): Promise<{ data: any[] }> {
   try {
     const response = await fetch(`${API_BASE}/pix/addressKeys`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -408,8 +447,8 @@ export async function getPixAddressKeys(): Promise<{ data: any[] }> {
  */
 export async function getBankAccounts(): Promise<{ data: any[] }> {
   try {
-    const response = await fetch(`${API_BASE}/bankAccounts`, {
-      headers: { 'Content-Type': 'application/json' }
+    const response = await fetch(`${API_BASE}/bankAccounts?limit=100`, {
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -430,7 +469,7 @@ export async function getBankAccounts(): Promise<{ data: any[] }> {
 export async function getPaymentHistory(paymentId: string): Promise<{ data: any[] }> {
   try {
     const response = await fetch(`${API_BASE}/payments/${paymentId}/history`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -451,7 +490,7 @@ export async function getPaymentHistory(paymentId: string): Promise<{ data: any[
 export async function getPaymentNotifications(paymentId: string): Promise<{ data: any[] }> {
   try {
     const response = await fetch(`${API_BASE}/payments/${paymentId}/notifications`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: await getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -467,29 +506,65 @@ export async function getPaymentNotifications(paymentId: string): Promise<{ data
 }
 
 /**
+ * Dados da conta bancária para transferência
+ */
+export interface BankAccountTransfer {
+  bank: string;        // Código do banco (ex: "341")
+  accountName: string; // Nome do titular
+  agency: string;      // Agência
+  account: string;     // Número da conta
+  accountDigit?: string; // Dígito da conta
+  bankAccountType?: string; // CONTA_CORRENTE ou CONTA_POUPANCA
+  cpfCnpj?: string;    // CPF ou CNPJ do titular
+}
+
+/**
  * Realiza uma transferência (Pix ou Saldo) para uma conta Própria
  */
-export async function transferPix(value: number, pixAddressKey?: string, pixAddressKeyType?: string, bankAccountId?: string): Promise<any> {
+export async function transferPix(
+  value: number,
+  pixAddressKey?: string,
+  pixAddressKeyType?: string,
+  bankAccountData?: BankAccountTransfer
+): Promise<any> {
   try {
     const body: any = {
       value,
+      operationType: 'PIX',
       description: 'Transferência entre contas próprias'
     };
 
     if (pixAddressKey) {
-      body.operationType = 'PIX';
       body.pixAddressKey = pixAddressKey;
       body.pixAddressKeyType = pixAddressKeyType;
-    } else if (bankAccountId) {
-      body.operationType = 'BANK_ACCOUNT';
-      body.bankAccount = bankAccountId;
+    } else if (bankAccountData) {
+      if ((bankAccountData as any).id) {
+        body.bankAccount = { id: (bankAccountData as any).id };
+      } else {
+        body.bankAccount = {
+          bank: {
+            code: bankAccountData.bank
+          },
+          accountName: bankAccountData.accountName,
+          agency: bankAccountData.agency,
+          account: bankAccountData.account,
+          accountDigit: bankAccountData.accountDigit || '',
+          bankAccountType: bankAccountData.bankAccountType || 'CONTA_CORRENTE'
+        };
+        // Adiciona CPF/CNPJ se disponível
+        if (bankAccountData.cpfCnpj) {
+          body.bankAccount.cpfCnpj = bankAccountData.cpfCnpj;
+        }
+      }
     } else {
-      throw new Error('É necessário informar uma chave Pix ou um ID de conta bancária.');
+      throw new Error('É necessário informar uma chave Pix ou dados de conta bancária.');
     }
+
+    console.log('DEBUG: Transfer body:', JSON.stringify(body, null, 2));
 
     const response = await fetch(`${API_BASE}/transfers`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify(body)
     });
 

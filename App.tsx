@@ -32,7 +32,8 @@ const App: React.FC = () => {
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   // Independent filter states for each tab
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const [filterMonthEnergy, setFilterMonthEnergy] = useState<string>(currentMonth);
   const [filterMonthAsaas, setFilterMonthAsaas] = useState<string>(currentMonth);
 
@@ -474,6 +475,8 @@ const App: React.FC = () => {
         <Asaas2Tab
           tenants={tenants}
           properties={properties}
+          bills={bills}
+          waterBills={waterBills}
         />
       )}
 
