@@ -489,12 +489,7 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
         const months = new Set<string>();
         const now = new Date();
 
-        // Garantir os próximos 5 meses (incluindo o atual)
-        for (let i = 0; i < 5; i++) {
-            const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-            const mStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            months.add(mStr);
-        }
+        // Os meses serão preenchidos apenas de acordo com os dados existentes
 
         bills?.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
         waterBills?.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
@@ -512,7 +507,7 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
         const s: Record<string, { count: number, total: number, label: string, color: string, gradient: string, icon: React.ReactNode, clients: number }> = {
             RECEIVED: { count: 0, total: 0, label: 'Recebidas', color: 'bg-emerald-500', gradient: 'from-emerald-400 to-teal-600', icon: <CheckCircle2 size={20} />, clients: 0 },
             CONFIRMED: { count: 0, total: 0, label: 'Confirmadas', color: 'bg-indigo-500', gradient: 'from-indigo-400 to-blue-700', icon: <CreditCard size={20} />, clients: 0 },
-            PENDING: { count: 0, total: 0, label: 'Aguardando', color: 'bg-amber-500', gradient: 'from-amber-300 to-orange-500', icon: <Clock size={20} />, clients: 0 },
+            PENDING: { count: 0, total: 0, label: 'Aguardando', color: 'bg-amber-500', gradient: 'from-amber-300 to-orange-500', icon: null, clients: 0 },
             OVERDUE: { count: 0, total: 0, label: 'Vencidas', color: 'bg-rose-500', gradient: 'from-rose-400 to-red-700', icon: <AlertCircle size={20} />, clients: 0 }
         };
 
@@ -1148,7 +1143,7 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
             case 'RECEIVED_IN_CASH':
                 return { bg: 'bg-emerald-500/10', text: 'text-emerald-500', icon: <CheckCircle2 size={12} />, label: 'Recebido' };
             case 'PENDING':
-                return { bg: 'bg-amber-500/10', text: 'text-amber-500', icon: <Clock size={12} />, label: 'Pendente' };
+                return { bg: 'bg-amber-500/10', text: 'text-amber-500', icon: null, label: 'Pendente' };
             case 'OVERDUE':
                 return { bg: 'bg-rose-500/10', text: 'text-rose-500', icon: <AlertCircle size={12} />, label: 'Vencido' };
             case 'CONFIRMED':
@@ -1323,7 +1318,7 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
 
                                     <div className="flex items-center justify-between mb-1 relative">
                                         <div className={`w-7 h-7 bg-gradient-to-br ${s.gradient} text-white rounded-lg flex items-center justify-center shadow-lg transition-transform`}>
-                                            {React.cloneElement(s.icon as React.ReactElement, { size: 12 })}
+                                            {s.icon && React.cloneElement(s.icon as React.ReactElement, { size: 12 })}
                                         </div>
                                         <div className="flex flex-col items-end">
                                             <span className="text-sm font-black text-slate-900 italic">{s.count}</span>
@@ -1612,26 +1607,27 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
                                                 <div className="flex justify-between items-end">
                                                     <div>
                                                         <p className="font-black text-slate-900 text-sm mb-0 group-hover:text-emerald-700 transition-colors uppercase tracking-tight">{displayName}</p>
-                                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{p.id}</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        {(p.status === 'PENDING' || p.status === 'OVERDUE') && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeletePayment(p.id, displayName);
-                                                                }}
-                                                                className="w-8 h-8 flex items-center justify-center text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all"
-                                                                title="Excluir Cobrança"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        )}
-                                                        <div className="text-right">
-                                                            <p className="text-slate-900 font-black text-lg leading-none mb-0.5">{formatCurrency(p.netValue || p.value)}</p>
-                                                            <div className="text-slate-400 text-[9px] font-black uppercase tracking-wider opacity-60">
-                                                                Bruto: {formatCurrency(p.value)}
+                                                        <div className="text-right flex items-center gap-2">
+                                                            <div className="text-right">
+                                                                <p className="text-slate-900 font-black text-lg leading-none mb-0.5">{formatCurrency(p.netValue || p.value)}</p>
+                                                                <div className="text-slate-400 text-[9px] font-black uppercase tracking-wider opacity-60">
+                                                                    Bruto: {formatCurrency(p.value)}
+                                                                </div>
                                                             </div>
+                                                            {(p.status === 'PENDING' || p.status === 'OVERDUE') && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeletePayment(p.id, displayName);
+                                                                    }}
+                                                                    className="w-8 h-8 flex items-center justify-center text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all"
+                                                                    title="Excluir Cobrança"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

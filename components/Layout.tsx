@@ -32,8 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     { id: 'properties', label: 'Unidades', icon: <Home size={20} /> },
     { id: 'tenants', label: 'Inquilinos', icon: <Users size={20} /> },
     { id: 'energy', label: 'Contas', icon: <Zap size={20} /> },
-    { id: 'asaas', label: 'Asaas', icon: <CreditCard size={20} /> },
-    { id: 'asaas2', label: 'Asaas 2', icon: <Wallet size={20} /> },
+    { id: 'asaas2', label: 'Asaas', icon: <Wallet size={20} /> },
     { id: 'security', label: 'Segurança', icon: <Shield size={20} /> },
   ];
 
