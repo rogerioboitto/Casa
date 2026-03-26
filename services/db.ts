@@ -16,7 +16,8 @@ import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
-  deleteObject
+  deleteObject,
+  uploadString
 } from "firebase/storage";
 import { dbInstance, storageInstance } from './firebaseConfig';
 import { Tenant, Property, EnergyBill, WaterBill, TenantDocument } from '../types';
@@ -166,25 +167,37 @@ export const db = {
 
   addEnergyBill: async (bill: Omit<EnergyBill, 'id'>): Promise<EnergyBill> => {
     const { fileUrl, ...metadata } = bill;
+    let finalUrl = fileUrl;
     let hasContent = false;
 
-    if (fileUrl && fileUrl.length > 1000) {
-      hasContent = true;
+    // Se for um Data URL (Base64), decide se vai para Storage ou fica no Documento
+    if (fileUrl && fileUrl.startsWith('data:')) {
+      // Se for maior que 10KB, mandamos para o Storage para garantir performance e evitar limite de 1MB do Firestore
+      const isLarge = fileUrl.length > 10000;
+      
+      if (isLarge) {
+        // Precisamos de um ID para o caminho no Storage. 
+        // Como o addDoc gera o ID depois, vamos gerar um UUID aqui para o Storage.
+        const storageId = crypto.randomUUID();
+        const extension = fileUrl.split(';')[0].split('/')[1] || 'pdf'; // Tenta extrair extensão do mime type
+        const storagePath = `bills/energy/${storageId}.${extension}`;
+        const storageRef = ref(storageInstance, storagePath);
+        
+        // Upload via uploadString (suporta data_url nativamente)
+        await uploadString(storageRef, fileUrl, 'data_url');
+        finalUrl = await getDownloadURL(storageRef);
+        hasContent = false; // Como agora temos uma URL pública/direta, não precisamos do hasContent (secundário)
+      }
     }
 
+    // Salva o documento principal no Firestore
     const docRef = await addDoc(collection(dbInstance, COLLECTION_BILLS), {
       ...metadata,
       hasContent,
-      fileUrl: hasContent ? null : fileUrl
+      fileUrl: finalUrl
     });
 
-    if (hasContent && fileUrl) {
-      await setDoc(doc(dbInstance, COLLECTION_BILL_CONTENTS, docRef.id), {
-        fileUrl: fileUrl
-      });
-    }
-
-    return { id: docRef.id, ...bill, hasContent };
+    return { id: docRef.id, ...bill, fileUrl: finalUrl, hasContent };
   },
 
   getEnergyBillContent: async (id: string): Promise<string | null> => {
@@ -202,10 +215,29 @@ export const db = {
   },
 
   deleteEnergyBill: async (id: string): Promise<void> => {
-    await deleteDoc(doc(dbInstance, COLLECTION_BILLS, id));
     try {
-      await deleteDoc(doc(dbInstance, COLLECTION_BILL_CONTENTS, id));
-    } catch (e) {
+      // Busca o documento antes de deletar para checar se tem URL do Storage
+      const billRef = doc(dbInstance, COLLECTION_BILLS, id);
+      const billSnap = await getDoc(billRef);
+      
+      if (billSnap.exists()) {
+        const data = billSnap.data();
+        if (data.fileUrl && data.fileUrl.includes('firebasestorage.googleapis.com')) {
+          try {
+            const storageRef = ref(storageInstance, data.fileUrl);
+            await deleteObject(storageRef);
+          } catch (e) {
+            console.warn("Aviso: arquivo no Storage não encontrado ou erro ao deletar:", e);
+          }
+        }
+      }
+      
+      // Deleta do Firestore
+      await deleteDoc(billRef);
+      await deleteDoc(doc(dbInstance, COLLECTION_BILL_CONTENTS, id)); // Tenta deletar conteúdo legado se houver
+    } catch (error) {
+      console.error("Erro ao deletar fatura:", error);
+      throw error;
     }
   },
 
@@ -236,25 +268,30 @@ export const db = {
 
   addWaterBill: async (bill: Omit<WaterBill, 'id'>): Promise<WaterBill> => {
     const { fileUrl, ...metadata } = bill;
+    let finalUrl = fileUrl;
     let hasContent = false;
 
-    if (fileUrl && fileUrl.length > 1000) {
-      hasContent = true;
+    // Lógica para Storage (mesma da Energia)
+    if (fileUrl && fileUrl.startsWith('data:')) {
+      const isLarge = fileUrl.length > 10000;
+      if (isLarge) {
+        const storageId = crypto.randomUUID();
+        const extension = fileUrl.split(';')[0].split('/')[1] || 'pdf';
+        const storagePath = `bills/water/${storageId}.${extension}`;
+        const storageRef = ref(storageInstance, storagePath);
+        await uploadString(storageRef, fileUrl, 'data_url');
+        finalUrl = await getDownloadURL(storageRef);
+        hasContent = false;
+      }
     }
 
     const docRef = await addDoc(collection(dbInstance, COLLECTION_WATER_BILLS), {
       ...metadata,
       hasContent,
-      fileUrl: hasContent ? null : fileUrl
+      fileUrl: finalUrl
     });
 
-    if (hasContent && fileUrl) {
-      await setDoc(doc(dbInstance, COLLECTION_WATER_BILL_CONTENTS, docRef.id), {
-        fileUrl: fileUrl
-      });
-    }
-
-    return { id: docRef.id, ...bill, hasContent };
+    return { id: docRef.id, ...bill, fileUrl: finalUrl, hasContent };
   },
 
   getWaterBillContent: async (id: string): Promise<string | null> => {
@@ -277,10 +314,27 @@ export const db = {
   },
 
   deleteWaterBill: async (id: string): Promise<void> => {
-    await deleteDoc(doc(dbInstance, COLLECTION_WATER_BILLS, id));
     try {
+      const billRef = doc(dbInstance, COLLECTION_WATER_BILLS, id);
+      const billSnap = await getDoc(billRef);
+      
+      if (billSnap.exists()) {
+        const data = billSnap.data();
+        if (data.fileUrl && data.fileUrl.includes('firebasestorage.googleapis.com')) {
+          try {
+            const storageRef = ref(storageInstance, data.fileUrl);
+            await deleteObject(storageRef);
+          } catch (e) {
+            console.warn("Aviso ao deletar conteúdo do Storage (Água):", e);
+          }
+        }
+      }
+      
+      await deleteDoc(billRef);
       await deleteDoc(doc(dbInstance, COLLECTION_WATER_BILL_CONTENTS, id));
-    } catch (e) {
+    } catch (error) {
+      console.error("Erro ao deletar fatura de água:", error);
+      throw error;
     }
   },
 

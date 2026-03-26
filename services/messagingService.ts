@@ -25,9 +25,14 @@ export async function saveTokenToDatabase() {
     try {
         const messaging = getMessaging(app);
 
+        // Aguardar o Service Worker estar pronto
+        const registration = await navigator.serviceWorker.ready;
+        console.log('Service Worker ready for FCM:', registration.scope);
+
         // Registrar o token do dispositivo
         const currentToken = await getToken(messaging, {
-            vapidKey: VAPID_KEY
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: registration
         });
 
         if (currentToken) {

@@ -51,6 +51,12 @@ export interface WaterBill {
   masterConsumption?: number; // Consumo total m3 da fatura principal
   uploadedAt: string;
   hasContent?: boolean; // Se true, o conteúdo está em water_bill_contents
+  // Campos de Troca de Medidor
+  isReplacement?: boolean;
+  newMeterStartReading?: number;
+  newMeterEndReading?: number;
+  newMeterStartPhotoUrl?: string;
+  newMeterEndPhotoUrl?: string;
 }
 
 export interface EnergyBill {
@@ -68,4 +74,10 @@ export interface EnergyBill {
   masterConsumption?: number; // Novo campo: Consumo total kWh da fatura principal (CPFL)
   uploadedAt: string;
   hasContent?: boolean; // Se true, o conteúdo (Base64) está em energy_bill_contents
+  // Campos de Troca de Medidor
+  isReplacement?: boolean;
+  newMeterStartReading?: number;
+  newMeterEndReading?: number;
+  newMeterStartPhotoUrl?: string;
+  newMeterEndPhotoUrl?: string;
 }

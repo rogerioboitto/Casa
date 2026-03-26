@@ -13,12 +13,32 @@ function getApiKey(): string {
 }
 
 /**
+ * Registra eventos de segurança no Firestore
+ */
+async function logSecurityEvent(event: string, details: any) {
+    try {
+        await admin.firestore().collection("security_logs").add({
+            event,
+            details,
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (error) {
+        logger.error("Erro ao registrar log de segurança:", error);
+    }
+}
+
+/**
  * Função auxiliar para validar se o usuário está autenticado e na whitelist
  */
 async function validateUser(req: functions.https.Request): Promise<{ email: string } | null> {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         logger.warn("[Security] Tentativa de acesso sem token de autorização.");
+        await logSecurityEvent("UNAUTHORIZED_ACCESS_ATTEMPT", {
+            ip: req.ip,
+            path: req.path,
+            reason: "Missing Bearer token"
+        });
         return null;
     }
 
@@ -33,6 +53,11 @@ async function validateUser(req: functions.https.Request): Promise<{ email: stri
         const allowedDoc = await admin.firestore().collection("allowed_emails").doc(email).get();
         if (!allowedDoc.exists) {
             logger.warn(`[Security] Usuário autenticado mas NÃO autorizado: ${email}`);
+            await logSecurityEvent("FORBIDDEN_ACCESS_ATTEMPT", {
+                email,
+                ip: req.ip,
+                path: req.path
+            });
             return null;
         }
 
@@ -179,7 +204,7 @@ export const asaasWebhook = functions.https.onRequest(async (req, res) => {
 
     try {
         const event = req.body;
-        logger.info("[AsaasWebhook] Event received:", event.event);
+        logger.info("[AsaasWebhook] Event received:", event?.event);
 
         // Events we are interested in
         const targetEvents = ["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "PAYMENT_RECEIVED_IN_CASH"];
@@ -188,10 +213,12 @@ export const asaasWebhook = functions.https.onRequest(async (req, res) => {
             const payment = event.payment;
             const valueFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.value);
 
+            logger.info("[AsaasWebhook] Fetching push tokens from Firestore...");
             // 1. Get all push tokens from Firestore
-            // We store them in a collection 'users' under a specific document or a 'pushTokens' collection
             const tokensSnapshot = await admin.firestore().collection("pushTokens").get();
-            const tokens = tokensSnapshot.docs.map(doc => doc.data().token);
+            const tokens = tokensSnapshot.docs.map(doc => doc.data().token).filter(t => !!t);
+
+            logger.info(`[AsaasWebhook] Found ${tokens.length} tokens.`);
 
             if (tokens.length > 0) {
                 const message = {
@@ -201,22 +228,29 @@ export const asaasWebhook = functions.https.onRequest(async (req, res) => {
                     },
                     data: {
                         paymentId: payment.id,
-                        click_action: "FLUTTER_NOTIFICATION_CLICK" // Common for many setups, or just custom data
+                        click_action: "FLUTTER_NOTIFICATION_CLICK"
                     },
                     tokens: tokens,
                 };
 
+                logger.info("[AsaasWebhook] Sending push notifications via FCM...");
                 const response = await admin.messaging().sendEachForMulticast(message);
-                logger.info(`[AsaasWebhook] Push notifications sent. Success: ${response.successCount}, Failure: ${response.failureCount}`);
+                logger.info(`[AsaasWebhook] Push notifications result: Success: ${response.successCount}, Failure: ${response.failureCount}`);
             } else {
                 logger.warn("[AsaasWebhook] No push tokens found in database.");
             }
+        } else {
+            logger.info("[AsaasWebhook] Event ignored:", event.event);
         }
 
         res.status(200).send("OK");
     } catch (error: any) {
-        logger.error("[AsaasWebhook] Error processing webhook:", error.message);
-        res.status(500).send("Internal Error");
+        logger.error("[AsaasWebhook] Fatal error processing webhook:", {
+            message: error.message,
+            code: error.code,
+            stack: error.stack
+        });
+        res.status(500).send(`Internal Error: ${error.message}`);
     }
 });
 

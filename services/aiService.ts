@@ -322,5 +322,55 @@ export const aiService = {
       console.error("Erro AI Hidrômetro:", error);
       throw error;
     }
+  },
+  
+  classifyDocument: async (base64Data: string, mimeType: string) => {
+    try {
+      const cleanBase64 = base64Data.split(',')[1] || base64Data;
+      const ai = getAiInstance();
+      if (!ai) throw new Error("API Key inválida.");
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: {
+          parts: [
+            { inlineData: { mimeType, data: cleanBase64 } },
+            {
+              text: `Analise este documento ou foto e identifique de qual tipo se trata.
+              
+              Os tipos possíveis são:
+              - 'energy_bill': Fatura/Conta de energia elétrica (CPFL).
+              - 'water_bill': Fatura/Conta de água/saneamento (Saneago/BRK/etc).
+              - 'energy_meter': Foto de um medidor de energia elétrica (relógio de luz).
+              - 'water_meter': Foto de um hidrômetro (medidor de água).
+              - 'pdv': Foto de um Ponto de Venda ou similar.
+              - 'unknown': Qualquer outro tipo de documento.
+
+              Retorne também uma breve descrição do que foi identificado.`
+            }
+          ]
+        },
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              type: { 
+                type: Type.STRING,
+                enum: ['energy_bill', 'water_bill', 'energy_meter', 'water_meter', 'pdv', 'unknown']
+              },
+              description: { type: Type.STRING }
+            },
+            required: ["type", "description"]
+          }
+        }
+      });
+
+      if (response.text) return JSON.parse(response.text);
+      throw new Error("Erro ao classificar documento.");
+    } catch (error) {
+      console.error("Erro AI Classificação:", error);
+      throw error;
+    }
   }
 };

@@ -488,9 +488,14 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
     const availableMonths = useMemo(() => {
         const months = new Set<string>();
         const now = new Date();
+        const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        months.add(current);
+        
+        const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const nextMonth = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}`;
+        months.add(nextMonth);
 
-        // Os meses serão preenchidos apenas de acordo com os dados existentes
-
+        // Os meses serão preenchidos de acordo com os dados existentes mais o atual e o próximo
         bills?.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
         waterBills?.forEach(b => b.referenceMonth !== 'N/A' && months.add(b.referenceMonth));
 
@@ -602,12 +607,29 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
             if (g.energy.reading || g.energy.invoice) {
                 const prevM = getPreviousMonth(g.month);
                 const propKey = g.property?.id || (g.energy.invoice?.installationCode || g.energy.reading?.installationCode);
+                let prevBill = null;
                 if (prevM && propKey && readingsMap.has(propKey)) {
-                    g.energy.prevReading = readingsMap.get(propKey)!.get(prevM)?.currentReading;
+                    prevBill = readingsMap.get(propKey)!.get(prevM);
+                    g.energy.prevReading = prevBill?.isReplacement ? prevBill.newMeterEndReading : prevBill?.currentReading;
                 }
                 const cur = g.energy.reading?.currentReading;
                 const prev = g.energy.prevReading;
-                const consumption = cur !== undefined && prev !== undefined ? (cur - prev) : (g.energy.invoice?.masterConsumption || 0);
+                
+                let oldMeterCons = 0;
+                let newMeterCons = 0;
+                if (cur !== undefined && prev !== undefined) {
+                    oldMeterCons = cur - prev;
+                }
+                
+                const energyReading = g.energy.reading;
+                if (energyReading?.isReplacement && energyReading.newMeterStartReading !== undefined && energyReading.newMeterEndReading !== undefined) {
+                    newMeterCons = energyReading.newMeterEndReading - energyReading.newMeterStartReading;
+                }
+                
+                const consumption = (cur !== undefined && prev !== undefined) || energyReading?.isReplacement 
+                    ? Math.max(0, oldMeterCons + newMeterCons) 
+                    : (g.energy.invoice?.masterConsumption || 0);
+
                 g.energy.consumption = consumption;
                 const cost = g.energy.invoice?.kwhUnitCost || 0;
                 g.energy.total = consumption * cost;
@@ -615,13 +637,27 @@ export const Asaas2Tab: React.FC<Asaas2TabProps> = ({ tenants, properties, bills
             if (g.water.reading || g.water.invoice) {
                 const prevM = getPreviousMonth(g.month);
                 const propKey = g.property?.id || (g.water.invoice?.installationCode || g.water.reading?.installationCode);
+                let prevBill = null;
                 if (prevM && propKey && waterReadingsMap.has(propKey)) {
-                    g.water.prevReading = waterReadingsMap.get(propKey)!.get(prevM)?.currentReading;
+                    prevBill = waterReadingsMap.get(propKey)!.get(prevM);
+                    g.water.prevReading = prevBill?.isReplacement ? prevBill.newMeterEndReading : prevBill?.currentReading;
                 }
                 const cur = g.water.reading?.currentReading;
                 const prev = g.water.prevReading;
+                
+                let oldWaterCons = 0;
+                let newWaterCons = 0;
                 if (cur !== undefined && prev !== undefined) {
-                    g.water.consumption = cur - prev;
+                    oldWaterCons = cur - prev;
+                }
+                
+                const waterReading = g.water.reading;
+                if (waterReading?.isReplacement && waterReading.newMeterStartReading !== undefined && waterReading.newMeterEndReading !== undefined) {
+                    newWaterCons = waterReading.newMeterEndReading - waterReading.newMeterStartReading;
+                }
+
+                if ((cur !== undefined && prev !== undefined) || waterReading?.isReplacement) {
+                    g.water.consumption = Math.max(0, oldWaterCons + newWaterCons);
                     g.water.total = g.water.consumption * (g.water.invoice?.m3UnitCost || 0);
                 }
             }
